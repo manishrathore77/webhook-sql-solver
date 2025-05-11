@@ -16,22 +16,23 @@ interface QuerySubmissionFormProps {
 }
 
 const QuerySubmissionForm = ({ webhookData, onSubmit }: QuerySubmissionFormProps) => {
-  const [sqlQuery, setSqlQuery] = useState(`SELECT 
-  MAX(p.AMOUNT) AS SALARY,
-  CONCAT(e.FIRST_NAME, ' ', e.LAST_NAME) AS NAME,
-  TIMESTAMPDIFF(YEAR, e.DOB, CURRENT_DATE) AS AGE,
-  d.DEPARTMENT_NAME
-FROM 
-  PAYMENTS p
-  JOIN EMPLOYEE e ON p.EMP_ID = e.EMP_ID
-  JOIN DEPARTMENT d ON e.DEPARTMENT = d.DEPARTMENT_ID
-WHERE 
-  DAY(p.PAYMENT_TIME) != 1
-GROUP BY 
-  e.FIRST_NAME, e.LAST_NAME, e.DOB, d.DEPARTMENT_NAME
-ORDER BY 
-  p.AMOUNT DESC
-LIMIT 1;`);
+  const [sqlQuery, setSqlQuery] = useState(`SELECT
+  e1.EMP_ID,
+  e1.FIRST_NAME,
+  e1.LAST_NAME,
+  d.DEPARTMENT_NAME,
+  COUNT(e2.EMP_ID) AS YOUNGER_EMPLOYEES_COUNT
+FROM
+  EMPLOYEE e1
+JOIN
+  DEPARTMENT d ON e1.DEPARTMENT = d.DEPARTMENT_ID
+LEFT JOIN
+  EMPLOYEE e2 ON e1.DEPARTMENT = e2.DEPARTMENT
+  AND e2.DOB > e1.DOB
+GROUP BY
+  e1.EMP_ID, e1.FIRST_NAME, e1.LAST_NAME, d.DEPARTMENT_NAME
+ORDER BY
+  e1.EMP_ID DESC;`);
   const [submitting, setSubmitting] = useState(false);
   const [response, setResponse] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
@@ -54,22 +55,23 @@ LIMIT 1;`);
   };
 
   const resetQuery = () => {
-    setSqlQuery(`SELECT 
-  MAX(p.AMOUNT) AS SALARY,
-  CONCAT(e.FIRST_NAME, ' ', e.LAST_NAME) AS NAME,
-  TIMESTAMPDIFF(YEAR, e.DOB, CURRENT_DATE) AS AGE,
-  d.DEPARTMENT_NAME
-FROM 
-  PAYMENTS p
-  JOIN EMPLOYEE e ON p.EMP_ID = e.EMP_ID
-  JOIN DEPARTMENT d ON e.DEPARTMENT = d.DEPARTMENT_ID
-WHERE 
-  DAY(p.PAYMENT_TIME) != 1
-GROUP BY 
-  e.FIRST_NAME, e.LAST_NAME, e.DOB, d.DEPARTMENT_NAME
-ORDER BY 
-  p.AMOUNT DESC
-LIMIT 1;`);
+    setSqlQuery(`SELECT
+  e1.EMP_ID,
+  e1.FIRST_NAME,
+  e1.LAST_NAME,
+  d.DEPARTMENT_NAME,
+  COUNT(e2.EMP_ID) AS YOUNGER_EMPLOYEES_COUNT
+FROM
+  EMPLOYEE e1
+JOIN
+  DEPARTMENT d ON e1.DEPARTMENT = d.DEPARTMENT_ID
+LEFT JOIN
+  EMPLOYEE e2 ON e1.DEPARTMENT = e2.DEPARTMENT
+  AND e2.DOB > e1.DOB
+GROUP BY
+  e1.EMP_ID, e1.FIRST_NAME, e1.LAST_NAME, d.DEPARTMENT_NAME
+ORDER BY
+  e1.EMP_ID DESC;`);
   };
 
   return (
