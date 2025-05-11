@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Send, Loader2 } from "lucide-react";
+import { Send, Loader2, RefreshCw } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface QuerySubmissionFormProps {
@@ -16,7 +16,22 @@ interface QuerySubmissionFormProps {
 }
 
 const QuerySubmissionForm = ({ webhookData, onSubmit }: QuerySubmissionFormProps) => {
-  const [sqlQuery, setSqlQuery] = useState("");
+  const [sqlQuery, setSqlQuery] = useState(`SELECT 
+  MAX(p.AMOUNT) AS SALARY,
+  CONCAT(e.FIRST_NAME, ' ', e.LAST_NAME) AS NAME,
+  TIMESTAMPDIFF(YEAR, e.DOB, CURRENT_DATE) AS AGE,
+  d.DEPARTMENT_NAME
+FROM 
+  PAYMENTS p
+  JOIN EMPLOYEE e ON p.EMP_ID = e.EMP_ID
+  JOIN DEPARTMENT d ON e.DEPARTMENT = d.DEPARTMENT_ID
+WHERE 
+  DAY(p.PAYMENT_TIME) != 1
+GROUP BY 
+  e.FIRST_NAME, e.LAST_NAME, e.DOB, d.DEPARTMENT_NAME
+ORDER BY 
+  p.AMOUNT DESC
+LIMIT 1;`);
   const [submitting, setSubmitting] = useState(false);
   const [response, setResponse] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
@@ -38,6 +53,25 @@ const QuerySubmissionForm = ({ webhookData, onSubmit }: QuerySubmissionFormProps
     }
   };
 
+  const resetQuery = () => {
+    setSqlQuery(`SELECT 
+  MAX(p.AMOUNT) AS SALARY,
+  CONCAT(e.FIRST_NAME, ' ', e.LAST_NAME) AS NAME,
+  TIMESTAMPDIFF(YEAR, e.DOB, CURRENT_DATE) AS AGE,
+  d.DEPARTMENT_NAME
+FROM 
+  PAYMENTS p
+  JOIN EMPLOYEE e ON p.EMP_ID = e.EMP_ID
+  JOIN DEPARTMENT d ON e.DEPARTMENT = d.DEPARTMENT_ID
+WHERE 
+  DAY(p.PAYMENT_TIME) != 1
+GROUP BY 
+  e.FIRST_NAME, e.LAST_NAME, e.DOB, d.DEPARTMENT_NAME
+ORDER BY 
+  p.AMOUNT DESC
+LIMIT 1;`);
+  };
+
   return (
     <Card className="h-full">
       <CardHeader>
@@ -49,9 +83,20 @@ const QuerySubmissionForm = ({ webhookData, onSubmit }: QuerySubmissionFormProps
       <CardContent>
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Your SQL Query Solution
-            </label>
+            <div className="flex justify-between items-center mb-1">
+              <label className="block text-sm font-medium text-gray-700">
+                Your SQL Query Solution
+              </label>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={resetQuery}
+                className="flex items-center gap-1"
+              >
+                <RefreshCw className="h-3 w-3" />
+                Reset Query
+              </Button>
+            </div>
             <Textarea
               placeholder="Write your SQL query here..."
               className="h-[200px] font-mono resize-none"
